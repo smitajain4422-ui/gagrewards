@@ -5,11 +5,14 @@ export async function GET(request: Request) {
   const s1 = searchParams.get("s1") || ""
   const s2 = searchParams.get("s2") || ""
 
-  // Your private AdBlueMedia API URL
+  // Private AdBlueMedia API URL
   const ADBLUE_URL = `https://d1cdbd1x576ga0.cloudfront.net/public/offers/feed.php?user_id=779217&api_key=45665e45f6e0cc2e67c90724cfedcfe8&s1=${s1}&s2=${s2}`
 
   try {
     const res = await fetch(ADBLUE_URL)
+    if (!res.ok) {
+      return NextResponse.json({ error: "Failed to fetch from provider" }, { status: res.status })
+    }
     const data = await res.json()
 
     // Trim to 5 offers as per your jQuery logic
@@ -30,5 +33,4 @@ export async function GET(request: Request) {
     console.error("Failed to fetch AdBlueMedia offers:", error)
     return NextResponse.json({ error: "Failed to fetch offers" }, { status: 500 })
   }
-}
-
+      }
