@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         url: '/rovloclick-logo.png',
         width: 980,
         height: 965,
-        alt: 'RovloClick',
+        alt: 'Grow a Garden 2',
       },
     ],
   },
