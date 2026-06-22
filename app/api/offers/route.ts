@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const ADBLUE_URL = `https://d1cdbd1x576ga0.cloudfront.net/public/offers/feed.php?user_id=779217&api_key=45665e45f6e0cc2e67c90724cfedcfe8&s1=${s1}&s2=${s2}&ip=${userIp}&user_agent=${encodeURIComponent(userAgent)}`
 
   try {
-    // We also pass the headers directly in the fetch request to ensure AdBlueMedia registers the true IP
+    // Pass the headers directly in the fetch request to ensure AdBlueMedia registers the true IP
     const res = await fetch(ADBLUE_URL, {
       headers: {
         "X-Forwarded-For": userIp,
@@ -43,8 +43,11 @@ export async function GET(request: Request) {
 
     // Map AdBlueMedia's schema
     const mappedOffers = rawOffers.map((offer: any, index: number) => {
-      const rawName = offer.title || offer.name || offer.anchor || "Complete Offer"
-      const rawDesc = offer.description || offer.conversion || "Follow the instructions to complete."
+      // FIX: Prioritize 'offer.name' (Actual internal campaign name) over 'anchor' or 'title'
+      const rawName = offer.name || offer.title || offer.anchor || "Complete Offer"
+      
+      // Use 'conversion' first for the description, as it usually has the direct instructions (e.g., "Complete survey")
+      const rawDesc = offer.conversion || offer.description || "Follow the instructions to complete."
 
       return {
         id: offer.offer_id?.toString() || index.toString(),
@@ -62,4 +65,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to fetch offers" }, { status: 500 })
   }
         }
-      
+        
