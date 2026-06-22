@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'RovloClick | All-in-One Roblox Tools Hub',
-  description: 'RovloClick is a clean Roblox resource hub for scripts, executor guides, compatibility notes, and game-focused updates.',
+  title: 'Grow a Garden 2 | Official',
+  description: 'Claim your favourite Grow a Garden Pets & Seeds instantly for FREE!',
   generator: 'v0.app',
   icons: {
     icon: '/rovloclick-logo.png',
