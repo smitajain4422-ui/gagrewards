@@ -42,11 +42,6 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
     fetchOffers()
   }, [apiUrl])
 
-  const getOfferUrl = (offer: Offer) => {
-    // URL usually already contains the correct s1/s2 appended by the server API
-    return offer.url
-  }
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -77,7 +72,7 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
       {offers.map((offer, index) => (
         <a
           key={offer.id}
-          href={getOfferUrl(offer)}
+          href={offer.url}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onOfferClick?.()}
@@ -123,43 +118,4 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
     </div>
   )
 }
-       </div>
-          )}
-
-          {/* Offer Image */}
-          <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-[#252542]">
-            {offer.picture ? (
-              <img
-                src={offer.picture}
-                alt={offer.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                No img
-              </div>
-            )}
-          </div>
-
-          {/* Offer Info - Full text, no truncation */}
-          <div className="flex-1 min-w-0">
-            <h3 className="text-white font-medium text-sm leading-tight mb-1">
-              {offer.name}
-            </h3>
-            <p className="text-[#8888aa] text-xs leading-snug">
-              {offer.description}
-            </p>
-          </div>
-
-          {/* Start Button */}
-          <button className="flex-shrink-0 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">
-            Start
-          </button>
-        </a>
-      ))}
-    </div>
-  )
-}
+  
