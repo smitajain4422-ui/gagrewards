@@ -76,7 +76,7 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onOfferClick?.()}
-          className="w-full bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center gap-3 transition-all duration-200 group relative"
+          className="w-full bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between gap-3 transition-all duration-200 group relative"
         >
           {index < 2 && (
             <div className="absolute -top-2 -left-2 bg-[#56ab2f] text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
@@ -84,24 +84,7 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
             </div>
           )}
 
-          <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-            {offer.picture ? (
-              <img
-                src={offer.picture}
-                alt={offer.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                Offer
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-2">
             <h3 className="text-gray-900 font-medium text-sm leading-tight mb-1">
               {offer.name}
             </h3>
