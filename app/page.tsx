@@ -107,12 +107,12 @@ export default function GagPage() {
   const popupIndexRef = useRef(0)
   const popupIdRef = useRef(0)
 
-  // AdBlueMedia Live Lead Polling (Replaces fake timer)
+  // AdBlueMedia Live Lead Polling
   useEffect(() => {
     let interval: NodeJS.Timeout
 
     const checkLeads = () => {
-      // JSONP injection to bypass CORS, exactly how jQuery handles callback=?
+      // JSONP injection to bypass CORS securely
       const script = document.createElement("script")
       const callbackName = "adblue_callback_" + Math.floor(Math.random() * 1000000)
       
@@ -127,7 +127,7 @@ export default function GagPage() {
         }
       }
 
-      // testing=0 for real leads. Change to testing=1 to test your UI
+      // testing=0 for real leads. Change to testing=1 to test your UI without actually doing an offer
       script.src = `https://d1cdbd1x576ga0.cloudfront.net/public/external/check2.php?testing=0&callback=${callbackName}`
       document.body.appendChild(script)
     }
@@ -274,11 +274,13 @@ export default function GagPage() {
       <div className="gag-bg relative overflow-hidden flex flex-col items-center pb-24">
         <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
           {floating.map((img) => (
+            // eslint-disable-next-line @next/next/no-img-element
             <img key={img.id} src={img.src || "/placeholder.svg"} alt="" style={{ position: "absolute", top: `${img.top}vh`, left: `${img.left}vw`, width: "150px", height: "auto", opacity: 0.5 }} />
           ))}
         </div>
 
         <div className="relative text-center mt-16 px-4" style={{ zIndex: 1 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="https://imgur.com/HSuZhh0.png" alt="Grow a Garden 2" className="mx-auto mb-5" style={{ maxWidth: 420, width: "90%" }} />
           <input
             type="text"
@@ -309,6 +311,7 @@ export default function GagPage() {
         <div className="fixed bottom-5 right-5 flex flex-col gap-2" style={{ zIndex: 1000 }}>
           {popups.map((p) => (
             <div key={p.id} className="bg-white border rounded-lg p-2.5 flex items-center gap-2.5 transition-opacity" style={{ width: 250, borderColor: "#ccc", boxShadow: "0px 2px 4px rgba(0,0,0,0.2)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.img || "/placeholder.svg"} alt={p.username} className="w-10 h-10 rounded-full object-cover bg-gray-100" />
               <div>
                 <h4 className="m-0 text-sm font-semibold text-black">{p.username}</h4>
@@ -323,12 +326,14 @@ export default function GagPage() {
         <div className="fixed inset-0 z-[999] gag-bg flex items-center justify-center p-4">
           <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
             {floating.map((img) => (
+              // eslint-disable-next-line @next/next/no-img-element
               <img key={`o-${img.id}`} src={img.src || "/placeholder.svg"} alt="" style={{ position: "absolute", top: `${img.top}vh`, left: `${img.left}vw`, width: "150px", height: "auto", opacity: 0.5 }} />
             ))}
           </div>
 
           {!showOfferwall ? (
             <div className="relative bg-white rounded-xl flex flex-col items-center justify-center" style={{ width: "90%", maxWidth: 600, minHeight: 320, boxShadow: "0 0 20px rgba(0,0,0,0.1)", zIndex: 2 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="https://imgur.com/HSuZhh0.png" alt="Grow a Garden" className="absolute top-3 left-1/2 -translate-x-1/2" style={{ maxWidth: 200, width: "60%" }} />
               <div className="flex flex-col items-center gap-2 px-4">
                 {loadingLines.map((line, i) => (
@@ -378,7 +383,7 @@ export default function GagPage() {
                 </div>
               </div>
 
-              {/* Secure API endpoint, passing the player's username as the sub-id tracking code */}
+              {/* Calls your secure internal backend API and passes the user's name */}
               <Offerwall apiUrl={`/api/offers?s1=${encodeURIComponent(username)}`} />
             </div>
           )}
@@ -399,6 +404,7 @@ function CardGrid({ items, selected, onToggle }: { items: Item[]; selected: Set<
               <div style={{ position: "absolute", top: -15, right: -20, width: 44, height: 44, background: "linear-gradient(to bottom, #ABEE3C, #71EF15)", borderRadius: "50%", zIndex: 2, border: "5px solid black", display: "flex", alignItems: "center", justifyContent: "center", color: "black", fontWeight: 700 }}>✓</div>
             )}
             <div className="rounded-lg bg-white/40 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-contain rounded-lg p-1" />
             </div>
             <div className="absolute bottom-0 left-0 w-full px-1 py-1 text-center rounded-b-lg" style={{ background: "rgba(255,255,255,0.5)", color: "#000", fontWeight: 700 }}>
@@ -409,86 +415,5 @@ function CardGrid({ items, selected, onToggle }: { items: Item[]; selected: Set<
       })}
     </div>
   )
-}
-   background: questCompleted > i ? "#56ab2f" : "transparent",
-                        }}
-                      >
-                        {questCompleted > i && (
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      Quest {i + 1}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Offerwall apiUrl={OFFERWALL_API} onOfferClick={handleOfferClick} />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function CardGrid({
-  items,
-  selected,
-  onToggle,
-}: {
-  items: Item[]
-  selected: Set<string>
-  onToggle: (name: string) => void
-}) {
-  return (
-    <div className="relative flex flex-wrap justify-center gap-5 px-4 mt-2 max-w-5xl" style={{ zIndex: 1 }}>
-      {items.map((item) => {
-        const isSelected = selected.has(item.name)
-        return (
-          <div
-            key={item.name}
-            onClick={() => onToggle(item.name)}
-            className="relative cursor-pointer rounded-lg"
-            style={{ width: 140, boxShadow: "0px 2px 4px rgba(0,0,0,0.2)" }}
-          >
-            {isSelected && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: -15,
-                  right: -20,
-                  width: 44,
-                  height: 44,
-                  background: "linear-gradient(to bottom, #ABEE3C, #71EF15)",
-                  borderRadius: "50%",
-                  zIndex: 2,
-                  border: "5px solid black",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "black",
-                  fontWeight: 700,
-                }}
-              >
-                ✓
-              </div>
-            )}
-            <div className="rounded-lg bg-white/40 flex items-center justify-center" style={{ aspectRatio: "1/1" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-contain rounded-lg p-1" />
-            </div>
-            <div
-              className="absolute bottom-0 left-0 w-full px-1 py-1 text-center rounded-b-lg"
-              style={{ background: "rgba(255,255,255,0.5)", color: "#000", fontWeight: 700 }}
-            >
-              <h3 style={{ fontSize: 16, margin: 0 }}>{item.name}</h3>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
+  }
+  
