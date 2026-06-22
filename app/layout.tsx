@@ -15,8 +15,8 @@ export const metadata: Metadata = {
     apple: '/rovloclick-logo.png',
   },
   openGraph: {
-    title: 'RovloClick | All-in-One Roblox Tools Hub',
-    description: 'RovloClick is a clean Roblox resource hub for scripts, executor guides, compatibility notes, and game-focused updates.',
+    title: 'Grow a Garden 2 | Official',
+    description: 'Claim your favourite Grow a Garden Pets & Seeds instantly for FREE!',
     images: [
       {
         url: '/rovloclick-logo.png',
@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'RovloClick | All-in-One Roblox Tools Hub',
-    description: 'RovloClick is a clean Roblox resource hub for scripts, executor guides, compatibility notes, and game-focused updates.',
+    title: 'Grow a Garden 2 | Official',
+    description: 'Claim your favourite Grow a Garden Pets & Seeds instantly for FREE!',
     images: ['/rovloclick-logo.png'],
   },
 }
