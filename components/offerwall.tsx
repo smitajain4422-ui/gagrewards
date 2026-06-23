@@ -15,10 +15,11 @@ interface OfferwallProps {
   s1?: string
   s2?: string
   apiUrl?: string
+  hiddenOffers?: string[] // Accepts the list of completed task IDs to hide
   onOfferClick?: () => void
 }
 
-export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: OfferwallProps) {
+export function Offerwall({ s1 = "", s2 = "", apiUrl = "", hiddenOffers = [], onOfferClick }: OfferwallProps) {
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,17 +60,22 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
     )
   }
 
-  if (offers.length === 0) {
+  // Filter out the completed offers, then grab the top 5 remaining ones
+  const displayOffers = offers
+    .filter((offer) => !hiddenOffers.includes(offer.id))
+    .slice(0, 5)
+
+  if (displayOffers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
-        <p className="text-sm text-gray-500">No offers available at this time.</p>
+        <p className="text-sm text-gray-500">No new offers available at this time.</p>
       </div>
     )
   }
 
   return (
     <div className="w-full flex flex-col gap-2">
-      {offers.map((offer, index) => (
+      {displayOffers.map((offer, index) => (
         <a
           key={offer.id}
           href={offer.url}
@@ -100,5 +106,5 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", onOfferClick }: Offer
       ))}
     </div>
   )
-}
-  
+      }
+        
