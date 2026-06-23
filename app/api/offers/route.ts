@@ -38,12 +38,12 @@ export async function GET(request: Request) {
     }
     const data = await res.json()
 
-    // Trim to 5 offers
-    const rawOffers = Array.isArray(data) ? data.slice(0, 5) : []
+    // We send ALL available offers here so the frontend has backup offers to replace the completed ones in the infinite loop
+    const rawOffers = Array.isArray(data) ? data : []
 
     // Map AdBlueMedia's schema
     const mappedOffers = rawOffers.map((offer: any, index: number) => {
-      // FIX: Prioritize 'offer.anchor' to get the friendly promotional text back
+      // Prioritize 'offer.anchor' to get the friendly promotional text back
       const rawName = offer.anchor || offer.title || offer.name || "Complete Offer"
       
       // Use 'conversion' for the direct instructions
@@ -64,4 +64,5 @@ export async function GET(request: Request) {
     console.error("Failed to fetch AdBlueMedia offers:", error)
     return NextResponse.json({ error: "Failed to fetch offers" }, { status: 500 })
   }
-      }
+}
+  
