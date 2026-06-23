@@ -12,7 +12,7 @@ interface Item {
 }
 
 const PETS: Item[] = [
-  { name: "Raccoon", image: "https://static.wikia.nocookie.net/growagarden/images/7/7c/Raccoon.png/revision/latest?cb=20250522095747" },
+  { name: "Raccoon", image: "https://i.postimg.cc/0ywKgKb2/Racoon.webp" },
   { name: "Unicorn", image: "https://static.wikia.nocookie.net/growagarden27847/images/7/7e/Unicorn.png" },
   { name: "Ice Serpent", image: "https://static.wikia.nocookie.net/growagarden27847/images/5/51/IceSerpent.png" },
   { name: "Golden Dragonfly", image: "https://static.wikia.nocookie.net/growagarden27847/images/e/ee/GoldenDragonfly.png" },
