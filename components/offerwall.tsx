@@ -106,5 +106,5 @@ export function Offerwall({ s1 = "", s2 = "", apiUrl = "", hiddenOffers = [], on
       ))}
     </div>
   )
-      }
-        
+                         }
+      
