@@ -99,6 +99,21 @@ export default function GagPage() {
   const floatingRef = useRef<FloatingImg[]>([])
   const rafRef = useRef<number>()
 
+    // Auto-select rewards from URL parameters (e.g., ?prize=Raccoon,Bee)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prizeParam = params.get('prize');
+    
+    if (prizeParam) {
+      // Split the string by commas if they sent multiple items
+      const selectedPrizes = prizeParam.split(',');
+      
+      // Update your selected state
+      setSelected(new Set(selectedPrizes));
+    }
+  }, []); // Only runs once on mount
+  
+
   // Quest tracker & Webhook Memory
   const [questCompleted, setQuestCompleted] = useState(0)
   const reportedLeadsRef = useRef<Set<string>>(new Set())
